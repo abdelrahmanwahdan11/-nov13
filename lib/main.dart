@@ -11,6 +11,7 @@ import 'controllers/record_controller.dart';
 import 'controllers/search_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'controllers/theme_controller.dart';
+import 'controllers/downloads_controller.dart';
 import 'core/i18n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -32,6 +33,7 @@ class _VoxaAppState extends State<VoxaApp> {
   ThemeController? _theme;
   AuthController? _auth;
   SettingsController? _settings;
+  DownloadsController? _downloads;
   late final FeedController _feed;
   late final PlayerController _player;
   late final RecordController _record;
@@ -59,12 +61,14 @@ class _VoxaAppState extends State<VoxaApp> {
     final theme = await ThemeController.load();
     final auth = await AuthController.load();
     final settings = await SettingsController.load();
+    final downloads = await DownloadsController.load();
     theme.addListener(_onThemeChanged);
     settings.addListener(_onSettingsChanged);
     setState(() {
       _theme = theme;
       _auth = auth;
       _settings = settings;
+      _downloads = downloads;
       _locale = Locale(settings.state.languageCode);
     });
     await _feed.refresh();
@@ -88,12 +92,17 @@ class _VoxaAppState extends State<VoxaApp> {
     _theme?.removeListener(_onThemeChanged);
     _settings?.removeListener(_onSettingsChanged);
     _feed.dispose();
+    _downloads?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_theme == null || _auth == null || _settings == null || _locale == null) {
+    if (_theme == null ||
+        _auth == null ||
+        _settings == null ||
+        _locale == null ||
+        _downloads == null) {
       return const MaterialApp(home: SizedBox.shrink());
     }
 
@@ -112,6 +121,7 @@ class _VoxaAppState extends State<VoxaApp> {
       edit: _edit,
       publish: _publish,
       search: _search,
+      downloads: _downloads!,
       compare: _compare,
       settings: _settings!,
       child: AnimatedBuilder(

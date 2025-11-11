@@ -2,11 +2,13 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../controllers/feed_controller.dart';
-import '../../../core/i18n/app_localizations.dart';
 import '../../../core/utils/controller_scope.dart';
+import '../../../core/i18n/app_localizations.dart';
+import '../../../data/dummy_data.dart';
 import '../../../models/audio_item.dart';
 import '../../widgets/genius_scaffold.dart';
 import '../../widgets/image_to_top_overlay.dart';
+import '../../widgets/pill_buttons.dart';
 import '../../widgets/skeleton_card.dart';
 import '../../widgets/tilt_3d_card.dart';
 import '../../widgets/waveform_stub.dart';
@@ -55,7 +57,7 @@ class _HomePageState extends State<HomePage> {
             _FeedTab(feed: feed, controller: _scrollController),
             _DiscoverPlaceholder(title: l10n.translate('discover')),
             _DiscoverPlaceholder(title: l10n.translate('record')),
-            _DiscoverPlaceholder(title: l10n.translate('library')),
+            const _LibraryTab(),
             _DiscoverPlaceholder(title: l10n.translate('profile')),
           ],
         ),
@@ -233,6 +235,105 @@ class _DiscoverPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
+    );
+  }
+}
+
+class _LibraryTab extends StatelessWidget {
+  const _LibraryTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final downloads = ControllerScope.of(context).downloads;
+    final l10n = context.l10n;
+    final drafts = DummyData.audioItems.take(3).toList();
+    return AnimatedBuilder(
+      animation: downloads,
+      builder: (context, _) {
+        final entries = downloads.entries.take(3).toList();
+        return ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            Text(l10n.translate('recent_drafts'),
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            if (drafts.isEmpty)
+              Text(l10n.translate('no_drafts'))
+            else
+              ...drafts.map(
+                (item) => Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(item.imageUrl),
+                    ),
+                    title: Text(item.title),
+                    subtitle: Text('${item.durationSec ~/ 60} min • ${item.mood}'),
+                    trailing: FilledPillButton(
+                      label: l10n.translate('publish'),
+                      onPressed: () => Navigator.of(context).pushNamed('/publish'),
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(l10n.translate('downloads'),
+                    style: Theme.of(context).textTheme.titleMedium),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pushNamed('/downloads'),
+                  child: Text(l10n.translate('view_all')), 
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (entries.isEmpty)
+              Text(l10n.translate('no_downloads'))
+            else
+              ...entries.map((entry) {
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(entry.imageUrl),
+                    ),
+                    title: Text(entry.title),
+                    subtitle: entry.isCompleted
+                        ? Text(l10n.translate('saved_offline'))
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              LinearProgressIndicator(value: entry.progress),
+                              const SizedBox(height: 4),
+                              Text('${(entry.progress * 100).floor()}%'),
+                            ],
+                          ),
+                    trailing: IconButton(
+                      icon: entry.isCompleted
+                          ? const Icon(Icons.check_circle_outline)
+                          : const Icon(Icons.open_in_new),
+                      onPressed: () =>
+                          Navigator.of(context).pushNamed('/downloads'),
+                    ),
+                  ),
+                );
+              }),
+            const SizedBox(height: 24),
+            FilledPillButton(
+              label: l10n.translate('browse_catalog'),
+              onPressed: () => Navigator.of(context).pushNamed('/catalog'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedPillButton(
+              label: l10n.translate('downloads'),
+              icon: const Icon(Icons.download_for_offline_outlined),
+              onPressed: () => Navigator.of(context).pushNamed('/downloads'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
