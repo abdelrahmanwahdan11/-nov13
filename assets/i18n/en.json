@@ -61,5 +61,21 @@
   "publish": "Publish",
   "recent_drafts": "Recent drafts",
   "no_drafts": "You have no drafts yet",
-  "view_all": "View all"
+  "view_all": "View all",
+  "search_hint": "Search by title, mood, or tags",
+  "search_empty": "We couldn't find any matches. Adjust your filters or try another keyword.",
+  "recent_searches": "Recent searches",
+  "clear_history": "Clear history",
+  "suggestions": "Suggestions",
+  "active_filters": "Active filters",
+  "mood": "Mood",
+  "duration": "Duration",
+  "sort": "Sort",
+  "search_duration_short": "Short (under 4 min)",
+  "search_duration_medium": "Medium (4-7 min)",
+  "search_duration_long": "Long (7+ min)",
+  "search_sort_recent": "Newest",
+  "search_sort_popular": "Most played",
+  "search_sort_duration": "Longest",
+  "search_filters_reset": "Reset filters"
 }

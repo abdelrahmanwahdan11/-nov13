@@ -61,5 +61,21 @@
   "publish": "نشر",
   "recent_drafts": "أحدث المسودات",
   "no_drafts": "لا توجد مسودات بعد",
-  "view_all": "عرض الكل"
+  "view_all": "عرض الكل",
+  "search_hint": "ابحث حسب العنوان أو المزاج أو الوسوم",
+  "search_empty": "لم نعثر على نتائج. غيّر الفلاتر أو جرّب كلمة أخرى.",
+  "recent_searches": "عمليات البحث الأخيرة",
+  "clear_history": "مسح السجل",
+  "suggestions": "اقتراحات",
+  "active_filters": "الفلاتر المفعّلة",
+  "mood": "المزاج",
+  "duration": "المدة",
+  "sort": "ترتيب",
+  "search_duration_short": "قصير (أقل من ٤ دقائق)",
+  "search_duration_medium": "متوسط (٤-٧ دقائق)",
+  "search_duration_long": "طويل (أكثر من ٧ دقائق)",
+  "search_sort_recent": "الأحدث",
+  "search_sort_popular": "الأكثر استماعاً",
+  "search_sort_duration": "الأطول",
+  "search_filters_reset": "إعادة تعيين الفلاتر"
 }
