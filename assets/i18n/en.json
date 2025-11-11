@@ -77,5 +77,20 @@
   "search_sort_recent": "Newest",
   "search_sort_popular": "Most played",
   "search_sort_duration": "Longest",
-  "search_filters_reset": "Reset filters"
+  "search_filters_reset": "Reset filters",
+  "notifications_title": "Notifications",
+  "notifications_filter_all": "All",
+  "notifications_filter_interactions": "Interactions",
+  "notifications_filter_follows": "Follows",
+  "notifications_filter_system": "Updates",
+  "notifications_empty_title": "You're all caught up",
+  "notifications_empty_body": "We'll let you know when something new happens.",
+  "notifications_pull_more": "Keep scrolling for more activity",
+  "mark_all_read": "Mark all read",
+  "mark_read": "Mark read",
+  "mute_creator": "Mute creator",
+  "unmute_creator": "Unmute creator",
+  "minutes_ago": "{value}m ago",
+  "hours_ago": "{value}h ago",
+  "days_ago": "{value}d ago"
 }

@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../controllers/feed_controller.dart';
+import '../../../controllers/notifications_controller.dart';
 import '../../../core/utils/controller_scope.dart';
 import '../../../core/i18n/app_localizations.dart';
 import '../../../data/dummy_data.dart';
@@ -106,6 +107,45 @@ class _FeedTabState extends State<_FeedTab> {
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 title: Text('Voxa', style: Theme.of(context).textTheme.headlineSmall),
+                actions: [
+                  AnimatedBuilder(
+                    animation: ControllerScope.of(context).notifications,
+                    builder: (context, _) {
+                      final NotificationsController notifications =
+                          ControllerScope.of(context).notifications;
+                      final unread = notifications.state.totalUnread;
+                      return IconButton(
+                        tooltip: l10n.translate('notifications_title'),
+                        onPressed: () => Navigator.of(context).pushNamed('/notifications'),
+                        icon: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const Icon(Icons.notifications_none_rounded),
+                            if (unread > 0)
+                              Positioned(
+                                right: -2,
+                                top: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    unread > 9 ? '9+' : '$unread',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(color: Theme.of(context).colorScheme.surface),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(64),
                   child: Padding(

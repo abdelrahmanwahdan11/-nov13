@@ -77,5 +77,20 @@
   "search_sort_recent": "الأحدث",
   "search_sort_popular": "الأكثر استماعاً",
   "search_sort_duration": "الأطول",
-  "search_filters_reset": "إعادة تعيين الفلاتر"
+  "search_filters_reset": "إعادة تعيين الفلاتر",
+  "notifications_title": "الإشعارات",
+  "notifications_filter_all": "الكل",
+  "notifications_filter_interactions": "التفاعلات",
+  "notifications_filter_follows": "المتابعون الجدد",
+  "notifications_filter_system": "تحديثات النظام",
+  "notifications_empty_title": "أنت مطّلع على كل شيء",
+  "notifications_empty_body": "سنخبرك حال حدوث أي نشاط جديد.",
+  "notifications_pull_more": "واصل التمرير لعرض مزيد من النشاط",
+  "mark_all_read": "وضع الكل كمقروء",
+  "mark_read": "وضع كمقروء",
+  "mute_creator": "كتم هذا المبدع",
+  "unmute_creator": "إلغاء كتم المبدع",
+  "minutes_ago": "منذ {value} د",
+  "hours_ago": "منذ {value} س",
+  "days_ago": "منذ {value} يوم"
 }

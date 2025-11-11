@@ -11,6 +11,7 @@ import '../../controllers/record_controller.dart';
 import '../../controllers/search_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../controllers/theme_controller.dart';
+import '../../controllers/notifications_controller.dart';
 
 class ControllerScope extends InheritedWidget {
   const ControllerScope({
@@ -26,6 +27,7 @@ class ControllerScope extends InheritedWidget {
     required this.downloads,
     required this.compare,
     required this.settings,
+    required this.notifications,
     required super.child,
   });
 
@@ -40,6 +42,7 @@ class ControllerScope extends InheritedWidget {
   final DownloadsController downloads;
   final CompareController compare;
   final SettingsController settings;
+  final NotificationsController notifications;
 
   static ControllerScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<ControllerScope>();
@@ -59,6 +62,7 @@ class ControllerScope extends InheritedWidget {
         search != oldWidget.search ||
         downloads != oldWidget.downloads ||
         compare != oldWidget.compare ||
-        settings != oldWidget.settings;
+        settings != oldWidget.settings ||
+        notifications != oldWidget.notifications;
   }
 }

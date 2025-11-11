@@ -12,6 +12,7 @@ import 'controllers/search_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/downloads_controller.dart';
+import 'controllers/notifications_controller.dart';
 import 'core/i18n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -41,6 +42,7 @@ class _VoxaAppState extends State<VoxaApp> {
   late final PublishController _publish;
   late final SearchController _search;
   late final CompareController _compare;
+  late final NotificationsController _notifications;
 
   Locale? _locale;
 
@@ -54,6 +56,7 @@ class _VoxaAppState extends State<VoxaApp> {
     _publish = PublishController();
     _search = SearchController();
     _compare = CompareController();
+    _notifications = NotificationsController();
     _loadAsync();
   }
 
@@ -72,6 +75,7 @@ class _VoxaAppState extends State<VoxaApp> {
       _locale = Locale(settings.state.languageCode);
     });
     await _feed.refresh();
+    await _notifications.ensureLoaded();
   }
 
   void _onThemeChanged() {
@@ -93,6 +97,7 @@ class _VoxaAppState extends State<VoxaApp> {
     _settings?.removeListener(_onSettingsChanged);
     _feed.dispose();
     _downloads?.dispose();
+    _notifications.dispose();
     super.dispose();
   }
 
@@ -124,6 +129,7 @@ class _VoxaAppState extends State<VoxaApp> {
       downloads: _downloads!,
       compare: _compare,
       settings: _settings!,
+      notifications: _notifications,
       child: AnimatedBuilder(
         animation: Listenable.merge([themeController, _settings!]),
         builder: (context, _) {
