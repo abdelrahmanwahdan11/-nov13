@@ -4,7 +4,9 @@ import '../../../controllers/search_controller.dart';
 import '../../../core/i18n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/controller_scope.dart';
+import '../../../core/utils/transparent_image.dart';
 import '../../../models/audio_item.dart';
+import '../../../models/onboarding_guide.dart';
 import '../../widgets/genius_app_bar.dart';
 import '../../widgets/genius_input.dart';
 import '../../widgets/genius_scaffold.dart';
@@ -167,7 +169,7 @@ class _SearchPageState extends State<SearchPage> {
                               child: SkeletonCard(),
                             ),
                           )
-                        : state.visible.isEmpty
+                        : (state.visible.isEmpty && state.guideMatches.isEmpty)
                             ? ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 controller: _scrollController,
@@ -196,14 +198,25 @@ class _SearchPageState extends State<SearchPage> {
                                 controller: _scrollController,
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 padding: const EdgeInsets.symmetric(vertical: 12),
-                                itemCount:
-                                    state.visible.length + (state.isPaginating ? 1 : 0),
+                                itemCount: state.guideMatches.length +
+                                    state.visible.length +
+                                    (state.isPaginating ? 1 : 0),
                                 separatorBuilder: (context, index) => const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
-                                  if (index >= state.visible.length) {
+                                  final int guideCount = state.guideMatches.length;
+                                  if (index < guideCount) {
+                                    final OnboardingGuide guide = state.guideMatches[index];
+                                    return _GuideResultTile(
+                                      guide: guide,
+                                      palette: palette,
+                                      label: l10n.translate('onboarding_guides_title'),
+                                    );
+                                  }
+                                  final int audioIndex = index - guideCount;
+                                  if (audioIndex >= state.visible.length) {
                                     return const SkeletonCard();
                                   }
-                                  final AudioItem item = state.visible[index];
+                                  final AudioItem item = state.visible[audioIndex];
                                   return _SearchResultTile(item: item, palette: palette);
                                 },
                               ),
@@ -735,6 +748,129 @@ class _SelectableChip extends StatelessWidget {
               color: foreground,
               fontWeight: FontWeight.w600,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GuideResultTile extends StatelessWidget {
+  const _GuideResultTile({required this.guide, required this.palette, required this.label});
+
+  final OnboardingGuide guide;
+  final GeniusPalette palette;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(geniusRadiusLarge),
+        border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(geniusRadiusLarge),
+        onTap: () => Navigator.of(context)
+            .pushNamed('/onboarding/guides', arguments: <String, String>{'focus': guide.id}),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(geniusRadiusSmall),
+                  border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+                  color: palette.surface,
+                ),
+                child: Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    color: palette.ink,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(geniusRadiusMedium),
+                      border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: FadeInImage.memoryNetwork(
+                      placeholder: transparentImage,
+                      image: guide.imageUrl,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          guide.title,
+                          style: TextStyle(
+                            color: palette.ink,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          guide.subtitle,
+                          style: TextStyle(color: palette.inkSecondary, height: 1.3),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                guide.description,
+                style: TextStyle(color: palette.inkSecondary, height: 1.4),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                children: guide.focusAreas
+                    .map(
+                      (area) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(geniusRadiusSmall),
+                          border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+                          color: palette.surface,
+                        ),
+                        child: Text(
+                          area.toUpperCase(),
+                          style: TextStyle(
+                            color: palette.ink,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
           ),
         ),
       ),

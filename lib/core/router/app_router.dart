@@ -11,6 +11,7 @@ import '../../ui/pages/home/home_page.dart';
 import '../../ui/pages/insights/insights_page.dart';
 import '../../ui/pages/library/drafts_library_page.dart';
 import '../../ui/pages/notifications/notifications_page.dart';
+import '../../ui/pages/onboarding/onboarding_guides_page.dart';
 import '../../ui/pages/onboarding/onboarding_page.dart';
 import '../../ui/pages/player/player_page.dart';
 import '../../ui/pages/profile/profile_page.dart';
@@ -28,6 +29,13 @@ class AppRouter {
         return _build(settings, const SplashPage());
       case '/onboarding':
         return _build(settings, const OnboardingStoryPage());
+      case '/onboarding/guides':
+        final Object? args = settings.arguments;
+        String? focusId;
+        if (args is Map && args['focus'] is String) {
+          focusId = args['focus'] as String;
+        }
+        return _build(settings, OnboardingGuidesPage(focusId: focusId));
       case '/auth/signin':
         return _build(settings, SignInPage(controller: authController));
       case '/auth/signup':

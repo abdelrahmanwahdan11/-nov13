@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../models/audio_item.dart';
 import '../models/community_event.dart';
+import '../models/onboarding_guide.dart';
 import '../models/user.dart';
 
 class DummyData {
@@ -69,4 +70,37 @@ class DummyData {
       'episodes': 45,
     },
   );
+
+  static final List<OnboardingGuide> onboardingGuides = <OnboardingGuide>[
+    const OnboardingGuide(
+      id: 'story',
+      title: 'Craft Your Story',
+      subtitle: 'Set the vibe before you hit record.',
+      description:
+          'Pair your intro with the perfect waveform, mood tags, and artwork. We walk you through building a sonic identity that hooks listeners from the first beat.',
+      imageUrl: _images[0],
+      focusAreas: <String>['branding', 'waveform', 'mood'],
+      actions: <String>['Open Editor', 'Browse Artwork'],
+    ),
+    const OnboardingGuide(
+      id: 'record',
+      title: 'Dial In Your Recording',
+      subtitle: 'Master mic levels and calibration.',
+      description:
+          'Use the live meter, calibrate in seconds, and save rehearsal takes so you never lose a great moment. We highlight shortcuts that keep the session flowing.',
+      imageUrl: _images[1],
+      focusAreas: <String>['record', 'calibrate', 'levels'],
+      actions: <String>['Open Recorder', 'View Labs'],
+    ),
+    const OnboardingGuide(
+      id: 'publish',
+      title: 'Publish Like a Pro',
+      subtitle: 'Turn edits into a polished drop.',
+      description:
+          'Auto-generate cover art, add tags that boost discovery, and schedule your release. This walkthrough shows how to polish, preview, and share in minutes.',
+      imageUrl: _images[2],
+      focusAreas: <String>['publish', 'tags', 'schedule'],
+      actions: <String>['Prepare Draft', 'Open Insights'],
+    ),
+  ];
 }

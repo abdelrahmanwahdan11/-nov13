@@ -18,6 +18,8 @@ import '../../widgets/waveform_stub.dart';
 import '../../../controllers/insights_controller.dart';
 import '../community/community_page.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/transparent_image.dart';
+import '../../../models/onboarding_guide.dart';
 
 const String _searchHeroTag = 'home_search_bar';
 
@@ -178,6 +180,12 @@ class _FeedTabState extends State<_FeedTab> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: const _QuickActionsRow(),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: _OnboardingGuidesPreview(),
                 ),
               ),
               SliverToBoxAdapter(
@@ -365,6 +373,169 @@ class _QuickActionsRow extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _OnboardingGuidesPreview extends StatelessWidget {
+  const _OnboardingGuidesPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final GeniusPalette palette = Theme.of(context).brightness == Brightness.dark
+        ? geniusTheme.dark
+        : geniusTheme.light;
+    final AppLocalizations l10n = context.l10n;
+    final List<OnboardingGuide> guides = DummyData.onboardingGuides;
+    if (guides.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.translate('onboarding_guides_preview_title'),
+              style: TextStyle(
+                color: palette.ink,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pushNamed('/onboarding/guides'),
+              style: TextButton.styleFrom(
+                foregroundColor: palette.ink,
+                textStyle: const TextStyle(decoration: TextDecoration.underline),
+              ),
+              child: Text(l10n.translate('view_all')),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 180,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) {
+              final OnboardingGuide guide = guides[index];
+              return _GuidePreviewCard(guide: guide, palette: palette);
+            },
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            itemCount: guides.length,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GuidePreviewCard extends StatelessWidget {
+  const _GuidePreviewCard({required this.guide, required this.palette});
+
+  final OnboardingGuide guide;
+  final GeniusPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 220,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(geniusRadiusLarge),
+          onTap: () => Navigator.of(context)
+              .pushNamed('/onboarding/guides', arguments: <String, String>{'focus': guide.id}),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(geniusRadiusLarge),
+              border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: FadeInImage.memoryNetwork(
+                        placeholder: transparentImage,
+                        image: guide.imageUrl,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 12,
+                      left: 12,
+                      right: 12,
+                      child: Text(
+                        guide.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      guide.subtitle,
+                      style: TextStyle(
+                        color: palette.inkSecondary,
+                        fontSize: 13,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: guide.focusAreas
+                          .take(2)
+                          .map(
+                            (area) => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: palette.surface,
+                                borderRadius: BorderRadius.circular(geniusRadiusSmall),
+                                border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+                              ),
+                              child: Text(
+                                area.toUpperCase(),
+                                style: TextStyle(
+                                  color: palette.ink,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

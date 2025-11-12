@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../data/dummy_data.dart';
 import '../models/audio_item.dart';
+import '../models/onboarding_guide.dart';
 
 const _pageSize = 8;
 
@@ -13,6 +14,7 @@ class SearchState {
     this.filters = const <String, dynamic>{},
     this.matches = const <AudioItem>[],
     this.visible = const <AudioItem>[],
+    this.guideMatches = const <OnboardingGuide>[],
     this.history = const <String>[],
     this.suggestions = const <String>[],
     this.isLoading = false,
@@ -25,6 +27,7 @@ class SearchState {
   final Map<String, dynamic> filters;
   final List<AudioItem> matches;
   final List<AudioItem> visible;
+  final List<OnboardingGuide> guideMatches;
   final List<String> history;
   final List<String> suggestions;
   final bool isLoading;
@@ -37,6 +40,7 @@ class SearchState {
     Map<String, dynamic>? filters,
     List<AudioItem>? matches,
     List<AudioItem>? visible,
+    List<OnboardingGuide>? guideMatches,
     List<String>? history,
     List<String>? suggestions,
     bool? isLoading,
@@ -49,6 +53,7 @@ class SearchState {
       filters: filters ?? this.filters,
       matches: matches ?? this.matches,
       visible: visible ?? this.visible,
+      guideMatches: guideMatches ?? this.guideMatches,
       history: history ?? this.history,
       suggestions: suggestions ?? this.suggestions,
       isLoading: isLoading ?? this.isLoading,
@@ -66,6 +71,7 @@ class SearchState {
       isLoading: false,
       matches: const <AudioItem>[],
       visible: const <AudioItem>[],
+      guideMatches: DummyData.onboardingGuides.take(2).toList(growable: false),
       filters: const <String, dynamic>{},
       query: '',
       page: 1,
@@ -101,6 +107,10 @@ class SearchController extends ChangeNotifier {
       base.add(item.mood);
       base.addAll(item.tags);
       base.add(item.creator);
+    }
+    for (final OnboardingGuide guide in DummyData.onboardingGuides) {
+      base.add(guide.title);
+      base.addAll(guide.focusAreas);
     }
     return base.take(10).toList();
   }
@@ -186,12 +196,14 @@ class SearchController extends ChangeNotifier {
       return;
     }
     final List<AudioItem> matches = _filterMatches();
+    final List<OnboardingGuide> guideMatches = _filterGuideMatches();
     final List<AudioItem> visible = matches.take(_pageSize).toList(growable: false);
     final List<String> history = saveHistory ? _updateHistory(_state.query) : _state.history;
     _emit(
       _state.copyWith(
         matches: matches,
         visible: visible,
+        guideMatches: guideMatches,
         history: history,
         page: 1,
         isLoading: false,
@@ -245,6 +257,19 @@ class SearchController extends ChangeNotifier {
         break;
     }
     return matches;
+  }
+
+  List<OnboardingGuide> _filterGuideMatches() {
+    final String query = _state.query.trim().toLowerCase();
+    if (query.isEmpty) {
+      return DummyData.onboardingGuides.take(2).toList(growable: false);
+    }
+    final Iterable<OnboardingGuide> filtered = DummyData.onboardingGuides.where((OnboardingGuide guide) {
+      final String haystack =
+          '${guide.title} ${guide.subtitle} ${guide.description} ${guide.focusAreas.join(' ')}'.toLowerCase();
+      return haystack.contains(query);
+    });
+    return filtered.take(3).toList(growable: false);
   }
 
   List<String> _updateHistory(String query) {
