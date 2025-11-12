@@ -51,7 +51,7 @@ class _VoxaAppState extends State<VoxaApp> {
   late final CommunityController _community;
   late final AchievementsController _achievements;
 
-  Locale? _locale;
+  bool _ready = false;
 
   @override
   void initState() {
@@ -75,14 +75,12 @@ class _VoxaAppState extends State<VoxaApp> {
     final auth = await AuthController.load();
     final settings = await SettingsController.load();
     final downloads = await DownloadsController.load();
-    theme.addListener(_onThemeChanged);
-    settings.addListener(_onSettingsChanged);
     setState(() {
       _theme = theme;
       _auth = auth;
       _settings = settings;
       _downloads = downloads;
-      _locale = Locale(settings.state.languageCode);
+      _ready = true;
     });
     await _feed.refresh();
     await _notifications.ensureLoaded();
@@ -91,23 +89,8 @@ class _VoxaAppState extends State<VoxaApp> {
     await _achievements.ensureLoaded();
   }
 
-  void _onThemeChanged() {
-    if (mounted) setState(() {});
-  }
-
-  void _onSettingsChanged() {
-    final locale = Locale(_settings!.state.languageCode);
-    if (locale != _locale && mounted) {
-      setState(() {
-        _locale = locale;
-      });
-    }
-  }
-
   @override
   void dispose() {
-    _theme?.removeListener(_onThemeChanged);
-    _settings?.removeListener(_onSettingsChanged);
     _feed.dispose();
     _downloads?.dispose();
     _notifications.dispose();
@@ -119,23 +102,24 @@ class _VoxaAppState extends State<VoxaApp> {
 
   @override
   Widget build(BuildContext context) {
-    if (_theme == null ||
+    if (!_ready ||
+        _theme == null ||
         _auth == null ||
         _settings == null ||
-        _locale == null ||
         _downloads == null) {
-      return const MaterialApp(home: SizedBox.shrink());
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: SplashPage(),
+      );
     }
 
     final themeController = _theme!;
-    final themeData = ThemeTokens.createTheme(
-      dark: themeController.isDark,
-      seed: themeController.primaryColor,
-    );
+    final authController = _auth!;
+    final settingsController = _settings!;
 
     return ControllerScope(
       theme: themeController,
-      auth: _auth!,
+      auth: authController,
       feed: _feed,
       player: _player,
       record: _record,
@@ -144,15 +128,19 @@ class _VoxaAppState extends State<VoxaApp> {
       search: _search,
       downloads: _downloads!,
       compare: _compare,
-      settings: _settings!,
+      settings: settingsController,
       notifications: _notifications,
       insights: _insights,
       community: _community,
       achievements: _achievements,
       child: AnimatedBuilder(
-        animation: Listenable.merge([themeController, _settings!]),
+        animation: Listenable.merge(<Listenable>[themeController, settingsController]),
         builder: (context, _) {
-          final locale = Locale(_settings!.state.languageCode);
+          final locale = Locale(settingsController.state.languageCode);
+          final themeData = ThemeTokens.createTheme(
+            dark: themeController.isDark,
+            seed: themeController.primaryColor,
+          );
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Voxa',
@@ -169,8 +157,9 @@ class _VoxaAppState extends State<VoxaApp> {
               dark: true,
               seed: themeController.primaryColor,
             ),
+            themeMode: themeController.isDark ? ThemeMode.dark : ThemeMode.light,
             onGenerateRoute: (settings) =>
-                AppRouter.onGenerateRoute(settings, ControllerScope.of(context).auth),
+                AppRouter.onGenerateRoute(settings, authController),
             home: const SplashPage(),
           );
         },
