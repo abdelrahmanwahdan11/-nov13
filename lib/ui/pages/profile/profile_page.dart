@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../controllers/insights_controller.dart';
+import '../../../controllers/settings_controller.dart';
+import '../../../controllers/theme_controller.dart';
 import '../../../core/i18n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/controller_scope.dart';
@@ -22,6 +24,8 @@ class ProfilePage extends StatelessWidget {
     final colors = Theme.of(context).brightness == Brightness.dark
         ? geniusTheme.dark
         : geniusTheme.light;
+    final themeController = ControllerScope.of(context).theme;
+    final settingsController = ControllerScope.of(context).settings;
 
     return GeniusScaffold(
       appBar: GeniusAppBar(
@@ -82,6 +86,17 @@ class ProfilePage extends StatelessWidget {
           _CreatorSnapshot(colors: colors),
           const SizedBox(height: 24),
           _AchievementsHighlights(colors: colors),
+          const SizedBox(height: 32),
+          Text(
+            l10n.translate('profile_personalize'),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          _ThemeLanguageControls(
+            colors: colors,
+            themeController: themeController,
+            settingsController: settingsController,
+          ),
           const SizedBox(height: 32),
           Text(
             l10n.translate('profile_creator_tools'),
@@ -217,6 +232,147 @@ class _CreatorSnapshot extends StatelessWidget {
       return '${difference.inHours}h';
     }
     return '${difference.inDays}d';
+  }
+}
+
+class _ThemeLanguageControls extends StatelessWidget {
+  const _ThemeLanguageControls({
+    required this.colors,
+    required this.themeController,
+    required this.settingsController,
+  });
+
+  final GeniusColors colors;
+  final ThemeController themeController;
+  final SettingsController settingsController;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final List<Color> paletteOptions = <Color>[
+      themeController.primaryColor,
+      const Color(0xFFFF6584),
+      const Color(0xFF4DD0E1),
+      const Color(0xFFA3E635),
+      const Color(0xFF7C4DFF),
+    ];
+    return AnimatedBuilder(
+      animation: Listenable.merge([themeController, settingsController]),
+      builder: (context, _) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radiusLg),
+            border: Border.all(color: colors.outline, width: geniusStrokeWidth),
+            color: colors.surface.withOpacity(0.92),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.translate('profile_dark_mode'),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Switch.adaptive(
+                    value: themeController.isDark,
+                    onChanged: themeController.toggleDarkMode,
+                    activeColor: theme.colorScheme.primary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.translate('profile_primary_pick'),
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: paletteOptions.map((color) {
+                  final bool selected = themeController.primaryColor.value == color.value;
+                  return GestureDetector(
+                    onTap: () => themeController.setPrimary(color),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: selected ? theme.colorScheme.onPrimary : colors.outline,
+                          width: selected ? 3 : geniusStrokeWidth,
+                        ),
+                      ),
+                      child: selected
+                          ? Icon(Icons.check, color: theme.colorScheme.onPrimary)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.translate('profile_language'),
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                children: [
+                  _LanguageChip(
+                    label: l10n.translate('profile_language_en'),
+                    selected: settingsController.state.languageCode == 'en',
+                    onSelected: () => settingsController.setLanguage('en'),
+                  ),
+                  _LanguageChip(
+                    label: l10n.translate('profile_language_ar'),
+                    selected: settingsController.state.languageCode == 'ar',
+                    onSelected: () => settingsController.setLanguage('ar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.geniusPalette;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
+      labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: selected ? Theme.of(context).colorScheme.onPrimary : palette.ink,
+          ),
+      selectedColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: palette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        side: BorderSide(color: selected ? Theme.of(context).colorScheme.primary : palette.outline, width: geniusStrokeWidth),
+      ),
+    );
   }
 }
 

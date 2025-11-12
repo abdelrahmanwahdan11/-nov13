@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../controllers/feed_controller.dart';
 import '../../../controllers/notifications_controller.dart';
+import '../../../controllers/player_controller.dart';
 import '../../../core/utils/controller_scope.dart';
 import '../../../core/i18n/app_localizations.dart';
 import '../../../data/dummy_data.dart';
@@ -10,7 +11,6 @@ import '../../../models/achievement.dart';
 import '../../../models/audio_item.dart';
 import '../../widgets/genius_scaffold.dart';
 import '../../widgets/genius_input.dart';
-import '../../widgets/image_to_top_overlay.dart';
 import '../../widgets/pill_buttons.dart';
 import '../../widgets/skeleton_card.dart';
 import '../../widgets/community_event_card.dart';
@@ -106,10 +106,13 @@ class _FeedTabState extends State<_FeedTab> {
     super.didChangeDependencies();
     if (!_bootstrapped) {
       _bootstrapped = true;
-      final feed = widget.feed;
-      if (feed.state.items.isEmpty && !feed.state.isLoading) {
-        feed.refresh();
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final feed = widget.feed;
+        if (feed.state.items.isEmpty && !feed.state.isLoading) {
+          feed.refresh();
+        }
+      });
     }
   }
 
@@ -127,6 +130,7 @@ class _FeedTabState extends State<_FeedTab> {
           final items = state.items;
           return CustomScrollView(
             controller: widget.controller,
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             slivers: [
               SliverAppBar(
                 pinned: true,
@@ -195,13 +199,13 @@ class _FeedTabState extends State<_FeedTab> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: const _QuickActionsRow(),
+                  child: const _AnimatedSection(index: 0, child: _QuickActionsRow()),
                 ),
               ),
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: _OnboardingGuidesPreview(),
+                  child: _AnimatedSection(index: 1, child: _OnboardingGuidesPreview()),
                 ),
               ),
               SliverToBoxAdapter(
@@ -211,12 +215,15 @@ class _FeedTabState extends State<_FeedTab> {
                     animation: search,
                     builder: (context, _) {
                       final suggestions = search.state.suggestions.take(6).toList();
-                      return _TrendingSearchChips(
-                        suggestions: suggestions,
-                        onSelected: (value) {
-                          search.applySuggestion(value);
-                          Navigator.of(context).pushNamed('/search');
-                        },
+                      return _AnimatedSection(
+                        index: 2,
+                        child: _TrendingSearchChips(
+                          suggestions: suggestions,
+                          onSelected: (value) {
+                            search.applySuggestion(value);
+                            Navigator.of(context).pushNamed('/search');
+                          },
+                        ),
                       );
                     },
                   ),
@@ -225,19 +232,19 @@ class _FeedTabState extends State<_FeedTab> {
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: _CreatorInsightsRibbon(),
+                  child: _AnimatedSection(index: 3, child: _CreatorInsightsRibbon()),
                 ),
               ),
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: _AchievementsPreview(),
+                  child: _AnimatedSection(index: 4, child: _AchievementsPreview()),
                 ),
               ),
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: _CommunitySpotlightPreview(),
+                  child: _AnimatedSection(index: 5, child: _CommunitySpotlightPreview()),
                 ),
               ),
               if (items.isEmpty && state.isLoading)
@@ -274,7 +281,7 @@ class _FeedTabState extends State<_FeedTab> {
                       }
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: _FeedCard(item: items[index]),
+                        child: _FeedCard(item: items[index], index: index),
                       );
                     },
                     childCount: state.hasMore ? items.length + 1 : items.length,
@@ -289,66 +296,124 @@ class _FeedTabState extends State<_FeedTab> {
 }
 
 class _FeedCard extends StatelessWidget {
-  const _FeedCard({required this.item});
+  const _FeedCard({required this.item, required this.index});
 
   final AudioItem item;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
-    return PageTransitionSwitcher(
-      duration: const Duration(milliseconds: 450),
-      transitionBuilder: (child, animation, secondaryAnimation) {
-        return FadeThroughTransition(
-          animation: animation,
-          secondaryAnimation: secondaryAnimation,
-          child: child,
+    final player = ControllerScope.of(context).player;
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 420 + (index * 40)),
+      curve: Curves.easeOutCubic,
+      tween: Tween<double>(begin: 40, end: 0),
+      builder: (context, offset, child) {
+        return Transform.translate(
+          offset: Offset(0, offset),
+          child: Opacity(
+            opacity: offset == 0 ? 1 : 0.85,
+            child: child,
+          ),
         );
       },
-      child: Tilt3DCard(
-        child: Card(
-          key: ValueKey(item.id),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          elevation: 0,
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.85),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ImageToTopOverlay(
-                  preview: Image.network(
-                    item.imageUrl,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  details: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 8),
-                      Text('${item.creator} • ${item.mood}'),
-                      const SizedBox(height: 8),
-                      Text('Plays: ${item.plays}'),
-                    ],
-                  ),
+      child: PageTransitionSwitcher(
+        duration: const Duration(milliseconds: 450),
+        transitionBuilder: (child, animation, secondaryAnimation) {
+          return FadeThroughTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            child: child,
+          );
+        },
+        child: Tilt3DCard(
+          child: InkWell(
+            onTap: () => Navigator.of(context).pushNamed('/player'),
+            child: Card(
+              key: ValueKey(item.id),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              elevation: 0,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.88),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final bool horizontal = constraints.maxWidth > 520;
+                    final Widget media = ClipRRect(
+                      borderRadius: BorderRadius.circular(radiusLg),
+                      child: FadeInImage.memoryNetwork(
+                        placeholder: transparentImage,
+                        image: item.imageUrl,
+                        height: horizontal ? constraints.maxHeight : 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                    final Widget meta = ValueListenableBuilder<PlayerState>(
+                      valueListenable: player,
+                      builder: (context, playerState, _) {
+                        final bool isCurrent = playerState.trackId == item.id;
+                        final bool isPlaying = isCurrent && playerState.isPlaying;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item.title, style: Theme.of(context).textTheme.titleLarge),
+                            const SizedBox(height: 8),
+                            Text('${item.creator} • ${item.mood} • ${item.durationSec ~/ 60}m'),
+                            const SizedBox(height: 12),
+                            WaveformStub(
+                              waveform: item.waveform,
+                              animate: isCurrent ? playerState.isPlaying : true,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    if (isCurrent) {
+                                      player.togglePlay();
+                                    } else {
+                                      player.playAudioItem(item);
+                                    }
+                                  },
+                                  icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                                ),
+                                IconButton(
+                                  onPressed: player.toggleLike,
+                                  icon: Icon(playerState.isLiked ? Icons.favorite : Icons.favorite_border),
+                                ),
+                                IconButton(
+                                  onPressed: player.toggleSave,
+                                  icon: Icon(playerState.isSaved ? Icons.bookmark : Icons.bookmark_border),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (horizontal) {
+                      return Row(
+                        children: [
+                          Expanded(flex: 3, child: media),
+                          const SizedBox(width: 20),
+                          Expanded(flex: 4, child: meta),
+                        ],
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        media,
+                        const SizedBox(height: 16),
+                        meta,
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 16),
-                Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text('${item.creator} • ${item.mood} • ${item.durationSec ~/ 60}m'),
-                const SizedBox(height: 16),
-                const WaveformStub(),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    IconButton(onPressed: () {}, icon: const Icon(Icons.play_arrow)),
-                    IconButton(onPressed: () {}, icon: const Icon(Icons.favorite_border)),
-                    IconButton(onPressed: () {}, icon: const Icon(Icons.bookmark_border)),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -400,6 +465,33 @@ class _FeedEmptyState extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AnimatedSection extends StatelessWidget {
+  const _AnimatedSection({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 380 + index * 60),
+      tween: Tween<double>(begin: 30, end: 0),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, value),
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 260),
+            opacity: value == 0 ? 1 : 0.85,
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

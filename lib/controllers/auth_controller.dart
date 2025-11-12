@@ -3,15 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/user.dart';
 import '../data/dummy_data.dart';
+import '../models/user.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({bool isGuest = true, User? user})
       : _isGuest = isGuest,
         _user = user;
 
-  static const _authModeKey = 'authMode';
+  static const String setupCompleteKey = 'authSetupComplete';
 
   bool _isGuest;
   User? _user;
@@ -24,8 +24,7 @@ class AuthController extends ChangeNotifier {
     _user = DummyData.user;
     _isGuest = false;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_authModeKey, 'user');
+    await _markSetupComplete();
   }
 
   Future<void> signUp(String email, String password, String name) async {
@@ -33,32 +32,28 @@ class AuthController extends ChangeNotifier {
     _user = DummyData.user;
     _isGuest = false;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_authModeKey, 'user');
+    await _markSetupComplete();
   }
 
   Future<void> continueAsGuest() async {
     _isGuest = true;
     _user = null;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_authModeKey, 'guest');
+    await _markSetupComplete();
   }
 
   Future<void> signOut() async {
     _isGuest = true;
     _user = null;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_authModeKey, 'guest');
   }
 
   static Future<AuthController> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final mode = prefs.getString(_authModeKey) ?? 'guest';
-    if (mode == 'user') {
-      return AuthController(isGuest: false, user: DummyData.user);
-    }
     return AuthController();
+  }
+
+  static Future<void> _markSetupComplete() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(setupCompleteKey, true);
   }
 }

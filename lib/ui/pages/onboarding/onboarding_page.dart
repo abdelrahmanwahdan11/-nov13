@@ -22,6 +22,7 @@ class _OnboardingStoryPageState extends State<OnboardingStoryPage> {
   Timer? _timer;
   int _index = 0;
   int _totalSlides = 0;
+  bool _hasCompleted = false;
 
   @override
   void initState() {
@@ -51,11 +52,19 @@ class _OnboardingStoryPageState extends State<OnboardingStoryPage> {
     if (_totalSlides <= 1) {
       return;
     }
-    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) async {
       if (!mounted || !_controller.hasClients || _totalSlides <= 1) {
         return;
       }
-      final int next = (_index + 1) % _totalSlides;
+      if (_index >= _totalSlides - 1) {
+        _timer?.cancel();
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        if (mounted) {
+          _completeOnboarding();
+        }
+        return;
+      }
+      final int next = (_index + 1).clamp(0, _totalSlides - 1);
       _controller.animateToPage(
         next,
         duration: const Duration(milliseconds: 600),
@@ -82,9 +91,14 @@ class _OnboardingStoryPageState extends State<OnboardingStoryPage> {
   }
 
   Future<void> _completeOnboarding() async {
+    if (_hasCompleted) {
+      return;
+    }
+    _hasCompleted = true;
     _timer?.cancel();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('firstRun', false);
+    await prefs.setBool('onboardingComplete', true);
     if (!mounted) {
       return;
     }
@@ -144,116 +158,146 @@ class _OnboardingStoryPageState extends State<OnboardingStoryPage> {
                       itemCount: slides.length,
                       itemBuilder: (context, index) {
                         final _OnboardingSlide slide = slides[index];
-                        return Column(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 32),
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    return Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Positioned(
-                                          top: 0,
-                                          child: AnimatedContainer(
-                                            duration: const Duration(milliseconds: 500),
-                                            curve: Curves.easeInOut,
-                                            width: constraints.maxWidth * 0.8,
-                                            height: constraints.maxHeight * 0.65,
-                                            decoration: BoxDecoration(
-                                              color: colors.surface.withOpacity(0.85),
-                                              borderRadius: BorderRadius.circular(radiusLg),
-                                              border: Border.all(
-                                                color: colors.outline,
-                                                width: geniusStrokeWidth,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          bottom: 0,
-                                          child: AnimatedContainer(
-                                            duration: const Duration(milliseconds: 500),
-                                            padding: const EdgeInsets.all(14),
-                                            decoration: BoxDecoration(
-                                              color: slide.visual.accent.withOpacity(0.9),
-                                              borderRadius: BorderRadius.circular(pillRadius.toDouble()),
-                                              border: Border.all(
-                                                color: colors.outline,
-                                                width: geniusStrokeWidth,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.auto_graph, color: Colors.black87),
-                                                const SizedBox(width: 12),
-                                                Text(
-                                                  slide.title,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelLarge
-                                                      ?.copyWith(color: Colors.black87),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(radiusLg),
-                                          child: AnimatedSwitcher(
-                                            duration: const Duration(milliseconds: 600),
-                                            child: Image.network(
-                                              slide.visual.image,
-                                              key: ValueKey<String>(slide.visual.image),
-                                              width: constraints.maxWidth * 0.78,
-                                              height: constraints.maxHeight * 0.6,
-                                              fit: BoxFit.cover,
-                                              loadingBuilder: (context, child, progress) {
-                                                if (progress == null) {
-                                                  return child;
-                                                }
-                                                return Container(
-                                                  width: constraints.maxWidth * 0.78,
-                                                  height: constraints.maxHeight * 0.6,
-                                                  alignment: Alignment.center,
-                                                  child: CircularProgressIndicator(
-                                                    value: progress.expectedTotalBytes != null
-                                                        ? progress.cumulativeBytesLoaded /
-                                                            progress.expectedTotalBytes!
-                                                        : null,
+                        final bool isActive = index == safeIndex;
+                        return AnimatedOpacity(
+                          duration: const Duration(milliseconds: 450),
+                          curve: Curves.easeInOut,
+                          opacity: isActive ? 1 : 0.4,
+                          child: AnimatedSlide(
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeOutCubic,
+                            offset: isActive ? Offset.zero : const Offset(0.05, 0),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 32),
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final double visualWidth = constraints.maxWidth * (constraints.maxWidth > 520 ? 0.7 : 0.82);
+                                        final double visualHeight = constraints.maxHeight * (constraints.maxHeight > 480 ? 0.6 : 0.5);
+                                        return Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Positioned(
+                                              top: 0,
+                                              child: AnimatedContainer(
+                                                duration: const Duration(milliseconds: 500),
+                                                curve: Curves.easeInOut,
+                                                width: visualWidth * 1.08,
+                                                height: visualHeight * 1.08,
+                                                decoration: BoxDecoration(
+                                                  color: colors.surface.withOpacity(0.85),
+                                                  borderRadius: BorderRadius.circular(radiusLg),
+                                                  border: Border.all(
+                                                    color: colors.outline,
+                                                    width: geniusStrokeWidth,
                                                   ),
-                                                );
-                                              },
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                            Text(
-                              slide.title,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: colors.ink,
-                                    fontWeight: FontWeight.bold,
+                                            Positioned(
+                                              bottom: 0,
+                                              child: AnimatedContainer(
+                                                duration: const Duration(milliseconds: 500),
+                                                padding: const EdgeInsets.all(14),
+                                                decoration: BoxDecoration(
+                                                  color: slide.visual.accent.withOpacity(0.9),
+                                                  borderRadius: BorderRadius.circular(pillRadius.toDouble()),
+                                                  border: Border.all(
+                                                    color: colors.outline,
+                                                    width: geniusStrokeWidth,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.auto_graph, color: Colors.black87),
+                                                    const SizedBox(width: 12),
+                                                    Text(
+                                                      slide.title,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .labelLarge
+                                                          ?.copyWith(color: Colors.black87),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(radiusLg),
+                                              child: AnimatedSwitcher(
+                                                duration: const Duration(milliseconds: 600),
+                                                transitionBuilder: (child, animation) {
+                                                  return FadeTransition(
+                                                    opacity: animation,
+                                                    child: ScaleTransition(
+                                                      scale: Tween<double>(begin: 0.95, end: 1).animate(animation),
+                                                      child: child,
+                                                    ),
+                                                  );
+                                                },
+                                                child: Image.network(
+                                                  slide.visual.image,
+                                                  key: ValueKey<String>(slide.visual.image),
+                                                  width: visualWidth,
+                                                  height: visualHeight,
+                                                  fit: BoxFit.cover,
+                                                  loadingBuilder: (context, child, progress) {
+                                                    if (progress == null) {
+                                                      return child;
+                                                    }
+                                                    return Container(
+                                                      width: visualWidth,
+                                                      height: visualHeight,
+                                                      alignment: Alignment.center,
+                                                      child: CircularProgressIndicator(
+                                                        value: progress.expectedTotalBytes != null
+                                                            ? progress.cumulativeBytesLoaded /
+                                                                progress.expectedTotalBytes!
+                                                            : null,
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
                                   ),
+                                ),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 400),
+                                  child: Text(
+                                    slide.title,
+                                    key: ValueKey<String>('title-${slide.title}'),
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                          color: colors.ink,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 400),
+                                  child: Text(
+                                    slide.description,
+                                    key: ValueKey<String>('body-${slide.description}'),
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(color: colors.inkSecondary, height: 1.5),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              slide.description,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(color: colors.inkSecondary),
-                            ),
-                          ],
+                          ),
                         );
                       },
                     ),
@@ -309,8 +353,9 @@ class _OnboardingStoryPageState extends State<OnboardingStoryPage> {
         ),
       ];
     }
-    return List<_OnboardingSlide>.generate(raw.length, (int index) {
-      final Map<String, String> item = raw[index];
+    final List<Map<String, String>> capped = raw.take(3).toList();
+    return List<_OnboardingSlide>.generate(capped.length, (int index) {
+      final Map<String, String> item = capped[index];
       final _OnboardingVisual visual = _onboardingVisuals[index % _onboardingVisuals.length];
       return _OnboardingSlide(
         title: item['title'] ?? '',

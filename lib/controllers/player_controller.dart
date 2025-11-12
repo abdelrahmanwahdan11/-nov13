@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../models/audio_item.dart';
+import '../models/recording_clip.dart';
 
 class PlayerState {
   PlayerState({
@@ -8,6 +13,10 @@ class PlayerState {
     required this.speed,
     required this.isLiked,
     required this.isSaved,
+    this.trackId,
+    this.trackTitle,
+    this.isLocal = false,
+    this.waveform = const <double>[],
   });
 
   final bool isPlaying;
@@ -16,6 +25,10 @@ class PlayerState {
   final double speed;
   final bool isLiked;
   final bool isSaved;
+  final String? trackId;
+  final String? trackTitle;
+  final bool isLocal;
+  final List<double> waveform;
 
   PlayerState copyWith({
     bool? isPlaying,
@@ -24,6 +37,10 @@ class PlayerState {
     double? speed,
     bool? isLiked,
     bool? isSaved,
+    String? trackId,
+    String? trackTitle,
+    bool? isLocal,
+    List<double>? waveform,
   }) {
     return PlayerState(
       isPlaying: isPlaying ?? this.isPlaying,
@@ -32,6 +49,10 @@ class PlayerState {
       speed: speed ?? this.speed,
       isLiked: isLiked ?? this.isLiked,
       isSaved: isSaved ?? this.isSaved,
+      trackId: trackId ?? this.trackId,
+      trackTitle: trackTitle ?? this.trackTitle,
+      isLocal: isLocal ?? this.isLocal,
+      waveform: waveform ?? this.waveform,
     );
   }
 }
@@ -46,18 +67,24 @@ class PlayerController extends ValueNotifier<PlayerState> {
             speed: 1,
             isLiked: false,
             isSaved: false,
+            waveform: const <double>[],
           ),
         );
 
+  Timer? _ticker;
+
   void togglePlay() {
-    value = value.copyWith(isPlaying: !value.isPlaying);
+    final bool next = !value.isPlaying;
+    value = value.copyWith(isPlaying: next);
+    if (next) {
+      _startTicker();
+    } else {
+      _stopTicker();
+    }
   }
 
   void seekBy(Duration delta) {
-    final newPosition = value.position + delta;
-    value = value.copyWith(
-      position: newPosition.clamp(Duration.zero, value.duration),
-    );
+    seekTo(value.position + delta);
   }
 
   void changeSpeed(double speed) {
@@ -70,5 +97,84 @@ class PlayerController extends ValueNotifier<PlayerState> {
 
   void toggleSave() {
     value = value.copyWith(isSaved: !value.isSaved);
+  }
+
+  void seekTo(Duration position) {
+    final Duration safe = _clampDuration(position, Duration.zero, value.duration);
+    value = value.copyWith(position: safe);
+  }
+
+  void playAudioItem(AudioItem item) {
+    _loadTrack(
+      id: item.id,
+      title: item.title,
+      duration: Duration(seconds: item.durationSec),
+      waveform: item.waveform,
+      isLocal: false,
+    );
+  }
+
+  void playRecording(RecordingClip clip) {
+    _loadTrack(
+      id: clip.id,
+      title: 'Recording ${clip.friendlyLabel}',
+      duration: clip.duration,
+      waveform: clip.waveform,
+      isLocal: true,
+    );
+  }
+
+  void _loadTrack({
+    required String id,
+    required String title,
+    required Duration duration,
+    required List<double> waveform,
+    required bool isLocal,
+  }) {
+    _stopTicker();
+    value = value.copyWith(
+      trackId: id,
+      trackTitle: title,
+      duration: duration,
+      position: Duration.zero,
+      waveform: waveform,
+      isLocal: isLocal,
+      isPlaying: true,
+    );
+    _startTicker();
+  }
+
+  void _startTicker() {
+    _ticker?.cancel();
+    _ticker = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      if (!value.isPlaying) {
+        return;
+      }
+      final int deltaMillis = (250 * value.speed).round();
+      final Duration next = value.position + Duration(milliseconds: deltaMillis);
+      if (next >= value.duration) {
+        value = value.copyWith(position: value.duration, isPlaying: false);
+        _stopTicker();
+      } else {
+        value = value.copyWith(position: next);
+      }
+    });
+  }
+
+  void _stopTicker() {
+    _ticker?.cancel();
+    _ticker = null;
+  }
+
+  Duration _clampDuration(Duration value, Duration min, Duration max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+  }
+
+  @override
+  void dispose() {
+    _stopTicker();
+    super.dispose();
   }
 }
