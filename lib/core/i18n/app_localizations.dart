@@ -32,20 +32,25 @@ class AppLocalizations {
   }
 
   List<Map<String, String>> listOfMaps(String key) {
-    final value = _map[key];
-    if (value is List) {
-      return value
-          .whereType<Map>()
-          .map((dynamic map) => map.map(
-                (dynamic key, dynamic value) => MapEntry(
-                  key.toString(),
-                  value?.toString() ?? '',
-                ),
-              ))
-          .cast<Map<String, String>>()
-          .toList(growable: false);
+    final dynamic value = _map[key];
+    if (value is! List) {
+      return const [];
     }
-    return const [];
+
+    final List<Map<String, String>> resolved = <Map<String, String>>[];
+    for (final dynamic entry in value) {
+      if (entry is! Map) {
+        continue;
+      }
+      final Map<String, String> mapped = entry.map(
+        (dynamic key, dynamic value) => MapEntry<String, String>(
+          key.toString(),
+          value?.toString() ?? '',
+        ),
+      );
+      resolved.add(mapped);
+    }
+    return List<Map<String, String>>.unmodifiable(resolved);
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
