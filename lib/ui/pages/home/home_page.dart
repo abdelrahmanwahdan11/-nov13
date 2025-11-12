@@ -8,6 +8,7 @@ import '../../../core/i18n/app_localizations.dart';
 import '../../../data/dummy_data.dart';
 import '../../../models/audio_item.dart';
 import '../../widgets/genius_scaffold.dart';
+import '../../widgets/genius_input.dart';
 import '../../widgets/image_to_top_overlay.dart';
 import '../../widgets/pill_buttons.dart';
 import '../../widgets/skeleton_card.dart';
@@ -17,6 +18,8 @@ import '../../widgets/waveform_stub.dart';
 import '../../../controllers/insights_controller.dart';
 import '../community/community_page.dart';
 import '../../../core/theme/app_theme.dart';
+
+const String _searchHeroTag = 'home_search_bar';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -96,6 +99,7 @@ class _FeedTabState extends State<_FeedTab> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final search = ControllerScope.of(context).search;
     return RefreshIndicator(
       onRefresh: () => widget.feed.refresh(),
       child: StreamBuilder<FeedState>(
@@ -154,12 +158,43 @@ class _FeedTabState extends State<_FeedTab> {
                   preferredSize: const Size.fromHeight(64),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: l10n.translate('search'),
-                        prefixIcon: const Icon(Icons.search),
+                    child: Hero(
+                      tag: _searchHeroTag,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: GeniusInput(
+                          key: const ValueKey('home_search_input'),
+                          hintText: l10n.translate('search_hint'),
+                          readOnly: true,
+                          suffix: const Icon(Icons.search),
+                          onTap: () => Navigator.of(context).pushNamed('/search'),
+                        ),
                       ),
                     ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: const _QuickActionsRow(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                  child: AnimatedBuilder(
+                    animation: search,
+                    builder: (context, _) {
+                      final suggestions = search.state.suggestions.take(6).toList();
+                      return _TrendingSearchChips(
+                        suggestions: suggestions,
+                        onSelected: (value) {
+                          search.applySuggestion(value);
+                          Navigator.of(context).pushNamed('/search');
+                        },
+                      );
+                    },
                   ),
                 ),
               ),
@@ -276,6 +311,186 @@ class _FeedCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionsRow extends StatelessWidget {
+  const _QuickActionsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? geniusTheme.dark
+        : geniusTheme.light;
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.translate('home_quick_actions'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _QuickActionChip(
+              label: l10n.translate('home_quick_record'),
+              icon: Icons.mic_none_rounded,
+              palette: palette,
+              onTap: () => Navigator.of(context).pushNamed('/record'),
+            ),
+            _QuickActionChip(
+              label: l10n.translate('home_quick_publish'),
+              icon: Icons.upload_rounded,
+              palette: palette,
+              onTap: () => Navigator.of(context).pushNamed('/publish'),
+            ),
+            _QuickActionChip(
+              label: l10n.translate('home_quick_catalog'),
+              icon: Icons.view_module_rounded,
+              palette: palette,
+              onTap: () => Navigator.of(context).pushNamed('/catalog'),
+            ),
+            _QuickActionChip(
+              label: l10n.translate('home_quick_settings'),
+              icon: Icons.tune_rounded,
+              palette: palette,
+              onTap: () => Navigator.of(context).pushNamed('/settings'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TrendingSearchChips extends StatelessWidget {
+  const _TrendingSearchChips({required this.suggestions, required this.onSelected});
+
+  final List<String> suggestions;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    if (suggestions.isEmpty) {
+      return const SizedBox(height: 0);
+    }
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? geniusTheme.dark
+        : geniusTheme.light;
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.translate('home_search_chips'),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: suggestions
+              .map(
+                (label) => _SuggestionChip(
+                  label: label,
+                  palette: palette,
+                  onTap: () => onSelected(label),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _QuickActionChip extends StatelessWidget {
+  const _QuickActionChip({
+    required this.label,
+    required this.icon,
+    required this.palette,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final GeniusPalette palette;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(pillRadius.toDouble()),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(pillRadius.toDouble()),
+          border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+          color: palette.surface.withOpacity(0.9),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: palette.ink),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(color: palette.ink, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SuggestionChip extends StatelessWidget {
+  const _SuggestionChip({
+    required this.label,
+    required this.palette,
+    required this.onTap,
+  });
+
+  final String label;
+  final GeniusPalette palette;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(pillRadius.toDouble()),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(pillRadius.toDouble()),
+          border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+          color: palette.surface.withOpacity(0.8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.search, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(color: palette.inkSecondary),
+            ),
+          ],
         ),
       ),
     );

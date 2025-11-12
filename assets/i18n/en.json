@@ -9,11 +9,24 @@
   "password": "Password",
   "agree_tos": "By clicking \"Sign Up\", you agree to the Terms of Service",
   "guest_continue": "Continue as Guest",
-  "onboarding": [
-    "Craft immersive audio stories",
-    "Follow creators and join rooms",
-    "Record, edit, and publish effortlessly"
+  "onboarding_slides": [
+    {
+      "title": "Craft immersive audio stories",
+      "description": "Shape episodic journeys with outlines, mood presets, and instant previews."
+    },
+    {
+      "title": "Follow creators and join labs",
+      "description": "Discover fresh drops, bookmark live labs, and grow together in real time."
+    },
+    {
+      "title": "Record, edit, and publish effortlessly",
+      "description": "Capture ideas, polish with smart tools, and share in a single flow."
+    }
   ],
+  "onboarding_prev": "Previous",
+  "onboarding_next": "Next",
+  "onboarding_skip": "Skip",
+  "onboarding_done": "Get Started",
   "home_feed": "For You",
   "home_following": "Following",
   "discover": "Discover",
@@ -31,6 +44,12 @@
   "report": "Report",
   "pull_refresh": "Pull to refresh",
   "loading": "Loading",
+  "home_quick_actions": "Quick actions",
+  "home_quick_record": "Open studio",
+  "home_quick_publish": "Publish draft",
+  "home_quick_catalog": "Browse catalog",
+  "home_quick_settings": "Tune settings",
+  "home_search_chips": "Trending searches",
   "play": "Play",
   "pause": "Pause",
   "guest": "Guest",

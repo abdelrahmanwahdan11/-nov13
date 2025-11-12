@@ -31,6 +31,23 @@ class AppLocalizations {
     return const [];
   }
 
+  List<Map<String, String>> listOfMaps(String key) {
+    final value = _map[key];
+    if (value is List) {
+      return value
+          .whereType<Map>()
+          .map((dynamic map) => map.map(
+                (dynamic key, dynamic value) => MapEntry(
+                  key.toString(),
+                  value?.toString() ?? '',
+                ),
+              ))
+          .cast<Map<String, String>>()
+          .toList(growable: false);
+    }
+    return const [];
+  }
+
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   static const supportedLocales = <Locale>[

@@ -11,6 +11,8 @@ import '../../widgets/genius_scaffold.dart';
 import '../../widgets/pill_buttons.dart';
 import '../../widgets/skeleton_card.dart';
 
+const String _searchHeroTag = 'home_search_bar';
+
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
@@ -21,12 +23,16 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   late final ScrollController _scrollController;
   late final TextEditingController _textController;
+  late final FocusNode _focusNode;
+  bool _didFocus = false;
+  bool _handledInitialQuery = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
     _textController = TextEditingController();
+    _focusNode = FocusNode();
   }
 
   @override
@@ -34,7 +40,34 @@ class _SearchPageState extends State<SearchPage> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didFocus) {
+      _didFocus = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
+    if (!_handledInitialQuery) {
+      _handledInitialQuery = true;
+      final Object? args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args['query'] is String) {
+        final String query = args['query'] as String;
+        if (query.isNotEmpty) {
+          final SearchController controller = ControllerScope.of(context).search;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            controller.updateQuery(query);
+          });
+        }
+      }
+    }
   }
 
   void _onScroll() {
@@ -78,16 +111,24 @@ class _SearchPageState extends State<SearchPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GeniusInput(
-                  controller: _textController,
-                  hintText: l10n.translate('search_hint'),
-                  onChanged: controller.updateQuery,
-                  suffix: state.query.isEmpty
-                      ? const Icon(Icons.search)
-                      : IconButton(
-                          onPressed: () => controller.updateQuery(''),
-                          icon: const Icon(Icons.close),
-                        ),
+                Hero(
+                  tag: _searchHeroTag,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: GeniusInput(
+                      key: const ValueKey('search_text_field'),
+                      controller: _textController,
+                      focusNode: _focusNode,
+                      hintText: l10n.translate('search_hint'),
+                      onChanged: controller.updateQuery,
+                      suffix: state.query.isEmpty
+                          ? const Icon(Icons.search)
+                          : IconButton(
+                              onPressed: () => controller.updateQuery(''),
+                              icon: const Icon(Icons.close),
+                            ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (state.filters.isNotEmpty)

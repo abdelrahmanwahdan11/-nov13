@@ -11,6 +11,11 @@ class GeniusInput extends StatelessWidget {
     this.keyboardType,
     this.suffix,
     this.onChanged,
+    this.onTap,
+    this.readOnly = false,
+    this.focusNode,
+    this.textInputAction,
+    this.autofocus = false,
   });
 
   final TextEditingController? controller;
@@ -19,6 +24,11 @@ class GeniusInput extends StatelessWidget {
   final TextInputType? keyboardType;
   final Widget? suffix;
   final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap;
+  final bool readOnly;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +40,11 @@ class GeniusInput extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       onChanged: onChanged,
+      onTap: onTap,
+      readOnly: readOnly,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      autofocus: autofocus,
       style: TextStyle(color: colors.ink),
       decoration: InputDecoration(
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
