@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'controllers/achievements_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/community_controller.dart';
 import 'controllers/compare_controller.dart';
@@ -47,6 +48,7 @@ class _VoxaAppState extends State<VoxaApp> {
   late final NotificationsController _notifications;
   late final InsightsController _insights;
   late final CommunityController _community;
+  late final AchievementsController _achievements;
 
   Locale? _locale;
 
@@ -63,6 +65,7 @@ class _VoxaAppState extends State<VoxaApp> {
     _notifications = NotificationsController();
     _insights = InsightsController();
     _community = CommunityController();
+    _achievements = AchievementsController();
     _loadAsync();
   }
 
@@ -84,6 +87,7 @@ class _VoxaAppState extends State<VoxaApp> {
     await _notifications.ensureLoaded();
     await _insights.ensureLoaded();
     await _community.ensureLoaded();
+    await _achievements.ensureLoaded();
   }
 
   void _onThemeChanged() {
@@ -108,6 +112,7 @@ class _VoxaAppState extends State<VoxaApp> {
     _notifications.dispose();
     _insights.dispose();
     _community.dispose();
+    _achievements.dispose();
     super.dispose();
   }
 
@@ -142,6 +147,7 @@ class _VoxaAppState extends State<VoxaApp> {
       notifications: _notifications,
       insights: _insights,
       community: _community,
+      achievements: _achievements,
       child: AnimatedBuilder(
         animation: Listenable.merge([themeController, _settings!]),
         builder: (context, _) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../ui/pages/achievements/achievements_page.dart';
 import '../../ui/pages/auth/auth_pages.dart';
 import '../../ui/pages/catalog/catalog_page.dart';
 import '../../ui/pages/community/community_page.dart';
@@ -68,6 +69,8 @@ class AppRouter {
         return _build(settings, const ProfilePage());
       case '/insights':
         return _build(settings, const InsightsPage());
+      case '/achievements':
+        return _build(settings, const AchievementsPage());
       case '/settings':
         return _build(settings, const SettingsPage());
       case '/notifications':

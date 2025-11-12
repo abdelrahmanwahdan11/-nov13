@@ -5,9 +5,11 @@ import '../../../core/i18n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/controller_scope.dart';
 import '../../../data/dummy_data.dart';
+import '../../../models/achievement.dart';
 import '../../../ui/widgets/genius_app_bar.dart';
 import '../../../ui/widgets/genius_scaffold.dart';
 import '../../../ui/widgets/pill_buttons.dart';
+import '../../../ui/widgets/skeleton_card.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -78,6 +80,8 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           _CreatorSnapshot(colors: colors),
+          const SizedBox(height: 24),
+          _AchievementsHighlights(colors: colors),
           const SizedBox(height: 32),
           Text(
             l10n.translate('profile_creator_tools'),
@@ -213,6 +217,184 @@ class _CreatorSnapshot extends StatelessWidget {
       return '${difference.inHours}h';
     }
     return '${difference.inDays}d';
+  }
+}
+
+class _AchievementsHighlights extends StatelessWidget {
+  const _AchievementsHighlights({required this.colors});
+
+  final GeniusColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final achievements = ControllerScope.of(context).achievements;
+    final l10n = context.l10n;
+    return AnimatedBuilder(
+      animation: achievements,
+      builder: (context, _) {
+        final state = achievements.state;
+        if (state.isLoading && state.achievements.isEmpty) {
+          return const SkeletonCard(height: 200);
+        }
+        final recent = state.recentlyUnlocked.take(3).toList();
+        final pinned = state.pinned.take(3).toList();
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(radiusLg),
+            border: Border.all(color: colors.outline, width: geniusStrokeWidth),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.translate('achievements'),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pushNamed('/achievements'),
+                    style: TextButton.styleFrom(foregroundColor: colors.ink),
+                    child: Text(l10n.translate('view_all')),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.translate('achievements_title'),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: colors.inkSecondary),
+              ),
+              if (recent.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                Text(
+                  l10n.translate('achievements_recent'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 14,
+                  children: recent
+                      .map((achievement) => _ProfileAchievementBadge(
+                            achievement: achievement,
+                            colors: colors,
+                          ))
+                      .toList(),
+                ),
+              ]
+              else ...[
+                const SizedBox(height: 16),
+                Text(
+                  l10n.translate('achievements_empty_recent'),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: colors.inkSecondary),
+                ),
+              ],
+              if (pinned.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                Text(
+                  l10n.translate('achievements_pinned'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 14,
+                  children: pinned
+                      .map((achievement) => _ProfileAchievementBadge(
+                            achievement: achievement,
+                            colors: colors,
+                            compact: true,
+                          ))
+                      .toList(),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ProfileAchievementBadge extends StatelessWidget {
+  const _ProfileAchievementBadge({
+    required this.achievement,
+    required this.colors,
+    this.compact = false,
+  });
+
+  final Achievement achievement;
+  final GeniusColors colors;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final Color iconColor = achievement.isUnlocked
+        ? theme.colorScheme.primary
+        : colors.ink;
+    final double width = compact ? 190 : 220;
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(radiusMd),
+          border: Border.all(color: colors.outline, width: geniusStrokeWidth),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(achievement.icon, color: iconColor, size: 24),
+            const SizedBox(height: 12),
+            Text(
+              achievement.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              achievement.description,
+              maxLines: compact ? 2 : 3,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.inkSecondary,
+                height: 1.35,
+              ),
+            ),
+            if (achievement.highlight != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                achievement.highlight!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(color: colors.inkSecondary),
+              ),
+            ],
+            const SizedBox(height: 12),
+            Text(
+              achievement.isUnlocked
+                  ? l10n.translate('achievements_unlocked')
+                  : '${achievement.progress}/${achievement.target}',
+              style: theme.textTheme.labelLarge,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

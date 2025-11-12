@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/achievements_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/community_controller.dart';
 import '../../controllers/compare_controller.dart';
@@ -32,6 +33,7 @@ class ControllerScope extends InheritedWidget {
     required this.notifications,
     required this.insights,
     required this.community,
+    required this.achievements,
     required super.child,
   });
 
@@ -49,6 +51,7 @@ class ControllerScope extends InheritedWidget {
   final NotificationsController notifications;
   final InsightsController insights;
   final CommunityController community;
+  final AchievementsController achievements;
 
   static ControllerScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<ControllerScope>();
@@ -71,6 +74,7 @@ class ControllerScope extends InheritedWidget {
         settings != oldWidget.settings ||
         notifications != oldWidget.notifications ||
         insights != oldWidget.insights ||
-        community != oldWidget.community;
+        community != oldWidget.community ||
+        achievements != oldWidget.achievements;
   }
 }

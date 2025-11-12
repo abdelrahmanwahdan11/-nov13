@@ -6,6 +6,7 @@ import '../../../controllers/notifications_controller.dart';
 import '../../../core/utils/controller_scope.dart';
 import '../../../core/i18n/app_localizations.dart';
 import '../../../data/dummy_data.dart';
+import '../../../models/achievement.dart';
 import '../../../models/audio_item.dart';
 import '../../widgets/genius_scaffold.dart';
 import '../../widgets/genius_input.dart';
@@ -210,6 +211,12 @@ class _FeedTabState extends State<_FeedTab> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: _CreatorInsightsRibbon(),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: _AchievementsPreview(),
                 ),
               ),
               const SliverToBoxAdapter(
@@ -734,6 +741,213 @@ class _CreatorInsightsRibbon extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _AchievementsPreview extends StatelessWidget {
+  const _AchievementsPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).brightness == Brightness.dark
+        ? geniusTheme.dark
+        : geniusTheme.light;
+    final l10n = context.l10n;
+    final achievements = ControllerScope.of(context).achievements;
+    return AnimatedBuilder(
+      animation: achievements,
+      builder: (context, _) {
+        final state = achievements.state;
+        if (state.isLoading && state.achievements.isEmpty) {
+          return const SkeletonCard(height: 160);
+        }
+        final xpLabel = l10n
+            .translate('achievements_xp_label')
+            .replaceFirst('{xp}', state.xp.toString())
+            .replaceFirst('{level}', state.level.toString());
+        final xpToNext = l10n
+            .translate('achievements_xp_to_next')
+            .replaceFirst('{xp}', state.xpToNext.toString());
+        final streakText = l10n
+            .translate('achievements_streak_current')
+            .replaceFirst('{days}', state.currentStreak.toString());
+        final pinned = state.pinned.take(2).toList();
+        return GestureDetector(
+          onTap: () => Navigator.of(context).pushNamed('/achievements'),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radiusLg),
+              border: Border.all(color: colors.outline, width: geniusStrokeWidth),
+              color: colors.surface.withOpacity(0.88),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.translate('achievements_title'),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  xpLabel,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: colors.inkSecondary),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.local_fire_department_outlined,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      streakText,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _PreviewProgressBar(
+                  value: state.dailyCompletion,
+                  colors: colors,
+                  highlight: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  xpToNext,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: colors.inkSecondary),
+                ),
+                if (pinned.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: pinned
+                        .map(
+                          (achievement) => _PinnedGoalChip(
+                            achievement: achievement,
+                            colors: colors,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PreviewProgressBar extends StatelessWidget {
+  const _PreviewProgressBar({
+    required this.value,
+    required this.colors,
+    required this.highlight,
+  });
+
+  final double value;
+  final GeniusColors colors;
+  final Color highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 12,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth * value.clamp(0, 1);
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radiusMd),
+              border: Border.all(color: colors.outline, width: geniusStrokeWidth),
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOut,
+                width: width,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(radiusMd),
+                  color: highlight,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PinnedGoalChip extends StatelessWidget {
+  const _PinnedGoalChip({
+    required this.achievement,
+    required this.colors,
+  });
+
+  final Achievement achievement;
+  final GeniusColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 220),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(radiusMd),
+          border: Border.all(color: colors.outline, width: geniusStrokeWidth),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Icon(
+              achievement.icon,
+              size: 18,
+              color: achievement.isUnlocked
+                  ? Theme.of(context).colorScheme.primary
+                  : colors.ink,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    achievement.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${achievement.progress}/${achievement.target}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelSmall
+                        ?.copyWith(color: colors.inkSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
