@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+typedef GeniusPalette = GeniusColors;
+
 class GeniusColors {
   GeniusColors({
     required this.bgGradientFrom,
@@ -57,6 +59,11 @@ const double radiusSm = 12;
 const double radiusMd = 18;
 const double radiusLg = 28;
 const double pillRadius = 999;
+
+const double geniusRadiusSmall = radiusSm;
+const double geniusRadiusMedium = radiusMd;
+const double geniusRadiusLarge = radiusLg;
+const double geniusPillRadius = pillRadius;
 
 class ThemeTokens {
   ThemeTokens._();
@@ -163,4 +170,9 @@ class GradientBackground extends StatelessWidget {
       child: child,
     );
   }
+}
+
+extension GeniusThemeContext on BuildContext {
+  GeniusPalette get geniusPalette =>
+      Theme.of(this).brightness == Brightness.dark ? geniusTheme.dark : geniusTheme.light;
 }

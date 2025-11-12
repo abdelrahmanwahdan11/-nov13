@@ -99,10 +99,25 @@ class _FeedTab extends StatefulWidget {
 }
 
 class _FeedTabState extends State<_FeedTab> {
+  bool _bootstrapped = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_bootstrapped) {
+      _bootstrapped = true;
+      final feed = widget.feed;
+      if (feed.state.items.isEmpty && !feed.state.isLoading) {
+        feed.refresh();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final search = ControllerScope.of(context).search;
+    final palette = context.geniusPalette;
     return RefreshIndicator(
       onRefresh: () => widget.feed.refresh(),
       child: StreamBuilder<FeedState>(
@@ -235,6 +250,16 @@ class _FeedTabState extends State<_FeedTab> {
                     childCount: 6,
                   ),
                 )
+              else if (items.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                    child: _FeedEmptyState(
+                      palette: palette,
+                      onRefresh: () => widget.feed.refresh(),
+                    ),
+                  ),
+                )
               else
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
@@ -327,6 +352,53 @@ class _FeedCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FeedEmptyState extends StatelessWidget {
+  const _FeedEmptyState({required this.palette, required this.onRefresh});
+
+  final GeniusPalette palette;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withOpacity(0.88),
+        borderRadius: BorderRadius.circular(geniusRadiusLarge),
+        border: Border.all(color: palette.outline, width: geniusStrokeWidth),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.translate('home_empty_title'),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.translate('home_empty_body'),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: palette.inkSecondary, height: 1.4),
+          ),
+          const SizedBox(height: 20),
+          FilledPillButton(
+            label: l10n.translate('home_empty_retry'),
+            onPressed: onRefresh,
+          ),
+        ],
       ),
     );
   }
