@@ -20,6 +20,7 @@ import 'core/i18n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/controller_scope.dart';
+import 'ui/pages/splash_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -170,7 +171,7 @@ class _VoxaAppState extends State<VoxaApp> {
             ),
             onGenerateRoute: (settings) =>
                 AppRouter.onGenerateRoute(settings, ControllerScope.of(context).auth),
-            initialRoute: '/splash',
+            home: const SplashPage(),
           );
         },
       ),

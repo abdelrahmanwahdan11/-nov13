@@ -25,14 +25,14 @@ class _SplashPageState extends State<SplashPage> {
     final bool setupComplete = prefs.getBool(AuthController.setupCompleteKey) ?? false;
     if (!mounted) return;
     if (!hasSeenOnboarding) {
-      Navigator.of(context).pushReplacementNamed('/onboarding');
+      Navigator.of(context).pushNamedAndRemoveUntil('/onboarding', (route) => false);
       return;
     }
     if (!setupComplete) {
-      Navigator.of(context).pushReplacementNamed('/auth/signin');
+      Navigator.of(context).pushNamedAndRemoveUntil('/auth/signin', (route) => false);
       return;
     }
-    Navigator.of(context).pushReplacementNamed('/home');
+    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
   }
 
   @override

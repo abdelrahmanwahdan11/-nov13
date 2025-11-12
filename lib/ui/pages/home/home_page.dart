@@ -99,21 +99,16 @@ class _FeedTab extends StatefulWidget {
 }
 
 class _FeedTabState extends State<_FeedTab> {
-  bool _bootstrapped = false;
-
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_bootstrapped) {
-      _bootstrapped = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final feed = widget.feed;
-        if (feed.state.items.isEmpty && !feed.state.isLoading) {
-          feed.refresh();
-        }
-      });
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final feed = widget.feed;
+      if (feed.state.items.isEmpty && !feed.state.isLoading) {
+        feed.refresh();
+      }
+    });
   }
 
   @override
@@ -138,6 +133,11 @@ class _FeedTabState extends State<_FeedTab> {
                 elevation: 0,
                 title: Text('Voxa', style: Theme.of(context).textTheme.headlineSmall),
                 actions: [
+                  IconButton(
+                    tooltip: l10n.translate('settings'),
+                    onPressed: () => Navigator.of(context).pushNamed('/settings'),
+                    icon: const Icon(Icons.settings_outlined),
+                  ),
                   AnimatedBuilder(
                     animation: ControllerScope.of(context).notifications,
                     builder: (context, _) {

@@ -26,6 +26,7 @@ import '../../ui/pages/static/static_pages.dart';
 class AppRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings, AuthController authController) {
     switch (settings.name) {
+      case '/':
       case '/splash':
         return _build(settings, const SplashPage());
       case '/onboarding':
