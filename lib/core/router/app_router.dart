@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import '../../controllers/auth_controller.dart';
 import '../../ui/pages/auth/auth_pages.dart';
 import '../../ui/pages/catalog/catalog_page.dart';
+import '../../ui/pages/community/community_page.dart';
 import '../../ui/pages/compare/compare_page.dart';
+import '../../ui/pages/downloads/downloads_page.dart';
 import '../../ui/pages/editor/editor_page.dart';
 import '../../ui/pages/home/home_page.dart';
+import '../../ui/pages/insights/insights_page.dart';
 import '../../ui/pages/library/drafts_library_page.dart';
-import '../../ui/pages/downloads/downloads_page.dart';
 import '../../ui/pages/notifications/notifications_page.dart';
 import '../../ui/pages/onboarding/onboarding_page.dart';
 import '../../ui/pages/player/player_page.dart';
@@ -18,7 +20,6 @@ import '../../ui/pages/search/search_page.dart';
 import '../../ui/pages/settings/settings_page.dart';
 import '../../ui/pages/splash_page.dart';
 import '../../ui/pages/static/static_pages.dart';
-import '../../ui/pages/insights/insights_page.dart';
 
 class AppRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings, AuthController authController) {
@@ -49,6 +50,8 @@ class AppRouter {
         return _build(settings, const DownloadsPage());
       case '/catalog':
         return _build(settings, const DiscoverCatalogPage());
+      case '/community':
+        return _build(settings, const CommunityPage());
       case '/search':
         return _build(settings, const SearchPage());
       case '/compare':

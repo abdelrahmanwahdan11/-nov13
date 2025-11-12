@@ -108,5 +108,19 @@
   "profile_creator_tools": "أدوات المبدع",
   "profile_playlists": "قوائم التشغيل المميزة",
   "profile_prompt_insights": "تابع تفاعل جمهورك واكتشف تحليلات أعمق.",
-  "plays": "استماعات"
+  "plays": "استماعات",
+  "community_title": "مختبر المجتمع",
+  "community_host_caption": "استضف تجارب جريئة مع مجتمع فوكسـا.",
+  "community_host_cta": "ابدأ جلسة",
+  "community_browse_catalog": "تصفّح الحكايات",
+  "community_live_toggle": "إظهار الجلسات المباشرة فقط",
+  "community_filter_all": "الكل",
+  "community_filter_challenges": "تحديات",
+  "community_filter_studios": "استوديوهات",
+  "community_filter_meetups": "لقاءات",
+  "community_upcoming_title": "تعاونات قادمة",
+  "community_updated": "تم التحديث {time}",
+  "community_moments_ago": "الآن",
+  "community_preview_title": "أبرز المجتمع",
+  "community_preview_cta": "افتح مختبر المجتمع"
 }

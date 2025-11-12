@@ -11,9 +11,11 @@ import '../../widgets/genius_scaffold.dart';
 import '../../widgets/image_to_top_overlay.dart';
 import '../../widgets/pill_buttons.dart';
 import '../../widgets/skeleton_card.dart';
+import '../../widgets/community_event_card.dart';
 import '../../widgets/tilt_3d_card.dart';
 import '../../widgets/waveform_stub.dart';
 import '../../../controllers/insights_controller.dart';
+import '../community/community_page.dart';
 import '../../../core/theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
@@ -58,7 +60,7 @@ class _HomePageState extends State<HomePage> {
           index: _currentIndex,
           children: [
             _FeedTab(feed: feed, controller: _scrollController),
-            _DiscoverPlaceholder(title: l10n.translate('discover')),
+            const CommunityView(inline: true),
             _DiscoverPlaceholder(title: l10n.translate('record')),
             const _LibraryTab(),
             _DiscoverPlaceholder(title: l10n.translate('profile')),
@@ -165,6 +167,12 @@ class _FeedTabState extends State<_FeedTab> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: _CreatorInsightsRibbon(),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: _CommunitySpotlightPreview(),
                 ),
               ),
               if (items.isEmpty && state.isLoading)
@@ -338,6 +346,57 @@ class _CreatorInsightsRibbon extends StatelessWidget {
                     ],
                   ),
           ),
+        );
+      },
+    );
+  }
+}
+
+class _CommunitySpotlightPreview extends StatelessWidget {
+  const _CommunitySpotlightPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final community = ControllerScope.of(context).community;
+    return AnimatedBuilder(
+      animation: community,
+      builder: (context, _) {
+        final state = community.state;
+        if (state.loading && state.events.isEmpty) {
+          return const SkeletonCard();
+        }
+        final event = state.spotlight.isNotEmpty ? state.spotlight.first : null;
+        if (event == null) {
+          return OutlinedPillButton(
+            label: l10n.translate('community_preview_cta'),
+            onPressed: () => Navigator.of(context).pushNamed('/community'),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.translate('community_preview_title'),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pushNamed('/community'),
+                  child: Text(l10n.translate('community_preview_cta')),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            CommunityEventCard(
+              event: event,
+              compact: true,
+              bookmarked: state.bookmarked.contains(event.id),
+              onBookmark: () => community.toggleBookmark(event.id),
+            ),
+          ],
         );
       },
     );

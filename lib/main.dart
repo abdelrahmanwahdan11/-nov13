@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'controllers/auth_controller.dart';
+import 'controllers/community_controller.dart';
 import 'controllers/compare_controller.dart';
+import 'controllers/downloads_controller.dart';
 import 'controllers/edit_controller.dart';
 import 'controllers/feed_controller.dart';
+import 'controllers/insights_controller.dart';
+import 'controllers/notifications_controller.dart';
 import 'controllers/player_controller.dart';
 import 'controllers/publish_controller.dart';
 import 'controllers/record_controller.dart';
 import 'controllers/search_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'controllers/theme_controller.dart';
-import 'controllers/downloads_controller.dart';
-import 'controllers/notifications_controller.dart';
-import 'controllers/insights_controller.dart';
 import 'core/i18n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -45,6 +46,7 @@ class _VoxaAppState extends State<VoxaApp> {
   late final CompareController _compare;
   late final NotificationsController _notifications;
   late final InsightsController _insights;
+  late final CommunityController _community;
 
   Locale? _locale;
 
@@ -60,6 +62,7 @@ class _VoxaAppState extends State<VoxaApp> {
     _compare = CompareController();
     _notifications = NotificationsController();
     _insights = InsightsController();
+    _community = CommunityController();
     _loadAsync();
   }
 
@@ -80,6 +83,7 @@ class _VoxaAppState extends State<VoxaApp> {
     await _feed.refresh();
     await _notifications.ensureLoaded();
     await _insights.ensureLoaded();
+    await _community.ensureLoaded();
   }
 
   void _onThemeChanged() {
@@ -103,6 +107,7 @@ class _VoxaAppState extends State<VoxaApp> {
     _downloads?.dispose();
     _notifications.dispose();
     _insights.dispose();
+    _community.dispose();
     super.dispose();
   }
 
@@ -136,6 +141,7 @@ class _VoxaAppState extends State<VoxaApp> {
       settings: _settings!,
       notifications: _notifications,
       insights: _insights,
+      community: _community,
       child: AnimatedBuilder(
         animation: Listenable.merge([themeController, _settings!]),
         builder: (context, _) {

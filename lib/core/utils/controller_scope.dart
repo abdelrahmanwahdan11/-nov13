@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../controllers/community_controller.dart';
 import '../../controllers/compare_controller.dart';
 import '../../controllers/downloads_controller.dart';
 import '../../controllers/edit_controller.dart';
 import '../../controllers/feed_controller.dart';
+import '../../controllers/insights_controller.dart';
+import '../../controllers/notifications_controller.dart';
 import '../../controllers/player_controller.dart';
 import '../../controllers/publish_controller.dart';
 import '../../controllers/record_controller.dart';
 import '../../controllers/search_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../controllers/theme_controller.dart';
-import '../../controllers/notifications_controller.dart';
-import '../../controllers/insights_controller.dart';
 
 class ControllerScope extends InheritedWidget {
   const ControllerScope({
@@ -30,6 +31,7 @@ class ControllerScope extends InheritedWidget {
     required this.settings,
     required this.notifications,
     required this.insights,
+    required this.community,
     required super.child,
   });
 
@@ -46,6 +48,7 @@ class ControllerScope extends InheritedWidget {
   final SettingsController settings;
   final NotificationsController notifications;
   final InsightsController insights;
+  final CommunityController community;
 
   static ControllerScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<ControllerScope>();
@@ -67,6 +70,7 @@ class ControllerScope extends InheritedWidget {
         compare != oldWidget.compare ||
         settings != oldWidget.settings ||
         notifications != oldWidget.notifications ||
-        insights != oldWidget.insights;
+        insights != oldWidget.insights ||
+        community != oldWidget.community;
   }
 }

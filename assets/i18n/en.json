@@ -108,5 +108,19 @@
   "profile_creator_tools": "Creator tools",
   "profile_playlists": "Featured playlists",
   "profile_prompt_insights": "Track how your stories resonate and unlock deeper analytics.",
-  "plays": "Plays"
+  "plays": "Plays",
+  "community_title": "Community Labs",
+  "community_host_caption": "Host bold experiments with the Voxa collective.",
+  "community_host_cta": "Start a Session",
+  "community_browse_catalog": "Browse Stories",
+  "community_live_toggle": "Show live-only sessions",
+  "community_filter_all": "All",
+  "community_filter_challenges": "Challenges",
+  "community_filter_studios": "Studios",
+  "community_filter_meetups": "Meetups",
+  "community_upcoming_title": "Upcoming collaborations",
+  "community_updated": "Updated {time}",
+  "community_moments_ago": "just now",
+  "community_preview_title": "Community spotlight",
+  "community_preview_cta": "Open Community Labs"
 }

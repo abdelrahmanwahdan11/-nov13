@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/audio_item.dart';
+import '../models/community_event.dart';
 import '../models/user.dart';
 
 class DummyData {
@@ -26,6 +27,34 @@ class DummyData {
       likes: 300 + random.nextInt(500),
       plays: 2000 + random.nextInt(5000),
       createdAt: DateTime.now().subtract(Duration(days: random.nextInt(40))),
+    );
+  });
+
+  static List<CommunityEvent> communityEvents = List<CommunityEvent>.generate(18, (index) {
+    final random = Random(index * 17);
+    final startOffset = random.nextInt(72) - 24;
+    final duration = 30 + random.nextInt(75);
+    return CommunityEvent(
+      id: 'event_$index',
+      title: 'Collab Lab ${String.fromCharCode(65 + index % 26)}',
+      subtitle: index.isEven
+          ? 'Layer immersive ambiences with fellow hosts.'
+          : 'Trade mastering tricks live with the Voxa crew.',
+      host: 'Studio ${index % 4 + 1}',
+      startTime: DateTime.now().add(Duration(hours: startOffset)),
+      duration: Duration(minutes: duration),
+      tags: [
+        if (index % 3 == 0) 'spatial',
+        if (index % 2 == 0) 'story',
+        if (index % 4 == 0) 'mixing',
+        if (index % 5 == 0) 'growth',
+        if (index % 2 == 1) 'community',
+      ].where((tag) => tag.isNotEmpty).toSet().toList(),
+      coverUrl: _images[index % _images.length],
+      attending: 20 + random.nextInt(80),
+      maxSlots: 120,
+      category: ['Challenges', 'Studios', 'Meetups'][index % 3],
+      isLive: startOffset <= 0 && startOffset.abs() * 60 < duration,
     );
   });
 
